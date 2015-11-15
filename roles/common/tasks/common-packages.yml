@@ -1,0 +1,14 @@
+---
+- name: install python-dnf
+  shell: dnf -y install python-dnf --allowerasing
+
+- name: test dnf
+  dnf: name=* state=latest
+
+- name: install common packages
+  dnf: name={{item}} state=present
+  with_items:
+    - libselinux-python
+    - libsemanage-python
+    - tar
+    - wget

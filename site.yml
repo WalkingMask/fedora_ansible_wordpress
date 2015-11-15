@@ -1,0 +1,12 @@
+---
+- name: install wordpress(apache mariadb php)
+  hosts: fedora
+  remote_user: root
+  become: yes
+
+  roles:
+    - common
+    - apache
+    - mariadb
+    - php
+    - wordpress

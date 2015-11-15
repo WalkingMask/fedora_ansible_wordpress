@@ -1,0 +1,22 @@
+---
+- name: copy download.sh
+  template: src=download.sh dest=~/
+
+- name: download wordpress
+  shell: "{{ item }}"
+  with_items:
+    - cd
+    - sh ~/download.sh
+    - rm ~/download.sh
+
+- name: fetch random salts for wordpress config
+  local_action: command curl https://api.wordpress.org/secret-key/1.1/salt/
+  register: "wp_salt"
+  sudo: no
+
+- name: copy wordpress config file
+  template: src=wp-config.php dest=/var/www/html/wp-config.php
+
+- name: set selinux policy for apache dir
+  command: chcon -Rt httpd_sys_content_t /var/www/html
+  notify: restart httpd

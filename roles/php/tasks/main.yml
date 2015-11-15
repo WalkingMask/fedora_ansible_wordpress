@@ -1,0 +1,30 @@
+---
+- name: remove php temporarily
+  dnf: name={{ item }} state=absent
+  with_items:
+    - php
+    - php-common
+
+- name: install php and php-common
+  dnf: name={{ item }} state=latest
+  with_items:
+    - php
+    - php-common
+
+- name: clean dnf
+  command: dnf clean packages
+
+- name: install php others
+  dnf: name={{ item }} state=latest
+  with_items:
+    - php-mysql
+    - php-mbstring
+    - php-gd
+    - php-pear
+    - php-pecl-apcu
+
+- name: set timezone in php.ini
+  template: src=php.ini dest=/etc/php.ini
+
+- name: configure apache php module
+  template: src=10-php.conf dest=/etc/httpd/conf.modules.d/10-php.conf

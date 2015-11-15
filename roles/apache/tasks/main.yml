@@ -1,0 +1,33 @@
+---
+- name: install firewalld
+  dnf: name=firewalld state=present
+
+- name: start firewalld
+  service: name=firewalld state=started enabled=yes
+
+- name: configure firewalld http
+  command: firewall-cmd --permanent --add-service=http
+
+- name: configure firewalld https
+  command: firewall-cmd --permanent --add-service=https
+
+- name: configure firewalld 80/tcp
+  command: firewall-cmd --permanent --add-port=80/tcp
+
+- name: restart firewalld
+  service: name=firewalld state=restarted
+
+- name: Install httpd
+  dnf: name=httpd state=present
+
+- name: create document root
+  file: dest=/var/www/html state=directory owner=apache group=apache mode=0755
+
+- name: remove httpd welcome.conf
+  file: path=/etc/httpd/conf.d/welcome.conf state=absent
+
+- name: copy apache configuration for wordpress
+  template: src=httpd.conf dest=/etc/httpd/conf/httpd.conf
+
+- name: start httpd
+  service: name=httpd state=started enabled=yes

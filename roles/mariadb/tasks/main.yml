@@ -1,0 +1,43 @@
+---
+- name: install mariadb
+  dnf: name={{ item }} state=present
+  with_items:
+    - mariadb
+    - mariadb-server
+    - MySQL-python
+
+- name: make mysqld.log
+  command: touch /var/log/mysqld.log
+
+- name: chown mysqld.log
+  command: chown mysql:mysql /var/log/mysqld.log
+
+- name: chcon mysqld.log
+  command: chcon system_u:object_r:mysqld_log_t:s0 /var/log/mysqld.log
+
+# selinuxをmariadbに適用すべきか否かわからない
+#- name: configure selinux to start mariadb on any port
+#  seboolean: name=mariadb_connect_any state=true persistent=yes
+#  when: ansible_selinux.status == "enabled"
+
+- name: start mariadb
+  service: name=mariadb state=started enabled=yes
+
+- name: set root user password
+  mysql_user: name=root host=localhost password={{ mysql_root_password }}
+  register: result
+  ignore_errors: True
+
+- name: debug message
+  debug: msg="mariadb root user has been configured"
+  when: result|failed
+
+- name: create mariadb configuration file
+  template: src=my.cnf dest=/etc/my.cnf mode=0600
+
+- name: create wordpress db
+  mysql_db: login_user=root login_password={{ mysql_root_password }} name={{ wp_db_name }} state=present
+
+- name: create wordpress db user
+  mysql_user: login_user=root login_password={{ mysql_root_password }} name={{ wp_db_user }} password={{ wp_db_password }} priv={{ wp_db_name }}.*:ALL host='localhost' state=present
+  notify: restart mariadb
